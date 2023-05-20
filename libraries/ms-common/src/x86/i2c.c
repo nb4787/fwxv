@@ -166,6 +166,13 @@ StatusCode i2c_read(I2CPort i2c, I2CAddress addr, uint8_t *rx_data, size_t rx_le
   return STATUS_CODE_OK;
 }
 
+static void prv_i2c_mock_tx(uint8_t data) {
+  delay(10);
+  while (queue_receive(&data) == STATUS_CODE_OK) {
+    printf("%u", data);
+  }
+}
+
 StatusCode i2c_write(I2CPort i2c, I2CAddress addr, uint8_t *tx_data, size_t tx_len) {
   if (i2c >= NUM_I2C_PORTS) {
     return status_msg(STATUS_CODE_INVALID_ARGS, "Invalid I2C port.");
@@ -179,6 +186,7 @@ StatusCode i2c_write(I2CPort i2c, I2CAddress addr, uint8_t *tx_data, size_t tx_l
   // Copy data into queue
   for (size_t tx = 0; tx < tx_len; tx++) {
     if (queue_send(&s_port[i2c].i2c_buf.queue, &tx_data[tx], 0)) {
+      prv_i2c_mock_tx(&tx_data[tx]);
       queue_reset(&s_port[i2c].i2c_buf.queue);
       mutex_unlock(&s_port[i2c].i2c_buf.mutex);
       return STATUS_CODE_RESOURCE_EXHAUSTED;
