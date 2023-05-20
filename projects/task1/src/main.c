@@ -31,7 +31,7 @@ TASK(task2, TASK_STACK_512) {
   while (true) {
     LOG_DEBUG("task2 %d\n", counter2);
     ++counter2;
-    prv_delay(1000);
+    delay_s(1);
   }
 }
 
