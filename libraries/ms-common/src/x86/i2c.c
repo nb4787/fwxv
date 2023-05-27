@@ -6,6 +6,7 @@
 #include "i2c.h"
 
 #include <stdbool.h>
+#include <string.h>
 
 #include "log.h"
 #include "queues.h"
@@ -41,6 +42,8 @@ typedef struct {
   volatile uint8_t num_rx_bytes;  // Number of bytes left to receive in rx mode
 } I2CPortData;
 
+static uint8_t i2c_mock_buffer[I2C_MAX_NUM_DATA];
+
 static I2CPortData s_port[NUM_I2C_PORTS] = {
   [I2C_PORT_1] = { .periph = RCC_APB1Periph_I2C1,
                    .base = I2C1,
@@ -72,6 +75,12 @@ static void prv_recover_lockup(I2CPort port) {
   // Reset I2C
   I2C_SoftwareResetCmd(s_port[port].base, ENABLE);
   I2C_SoftwareResetCmd(s_port[port].base, DISABLE);
+}
+
+StatusCode i2c_set_data(uint8_t *data, uint8_t len) {
+  if (len < I2C_MAX_NUM_DATA) {
+    memcpy(data, i2c_mock_buffer, len);
+  }
 }
 
 StatusCode i2c_init(I2CPort i2c, const I2CSettings *settings) {
@@ -169,7 +178,7 @@ StatusCode i2c_read(I2CPort i2c, I2CAddress addr, uint8_t *rx_data, size_t rx_le
 static void prv_i2c_mock_tx(uint8_t data) {
   delay(10);
   while (queue_receive(&data) == STATUS_CODE_OK) {
-    printf("%u", data);
+    printf("%u \n", data);
   }
 }
 
