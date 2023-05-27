@@ -163,6 +163,10 @@ StatusCode i2c_read(I2CPort i2c, I2CAddress addr, uint8_t *rx_data, size_t rx_le
     return STATUS_CODE_TIMEOUT;
   }
 
+  for (uint32_t i; i < I2C_MAX_NUM_DATA; i++) {
+    queue_send(i2c_mock_buffer[i]);
+  }
+
   // Receive data from queue
   // If less than requested is received, an error in the transaction has occurred
   for (size_t rx = 0; rx < rx_len; rx++) {
@@ -172,6 +176,7 @@ StatusCode i2c_read(I2CPort i2c, I2CAddress addr, uint8_t *rx_data, size_t rx_le
     }
   }
   mutex_unlock(&s_port[i2c].i2c_buf.mutex);
+  queue_reset(&s_port[i2c].i2c_buf.queue);
   return STATUS_CODE_OK;
 }
 
