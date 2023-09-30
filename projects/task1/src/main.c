@@ -33,6 +33,7 @@ TASK(task2, TASK_STACK_512) {
  printf("task2 %d \n",counter2);
    ++counter2;
    prv_delay(1000);
+   delay_ms(1000);
   }
 }
 
@@ -43,7 +44,9 @@ int main(void) {
     // Create tasks here
 
     LOG_DEBUG("Program start...\n");
-    tasks_init_task(task1, TASK_PRIORITY(2), NULL);
+    tasks_init_task(task1, TASK_PRIORITY(1), NULL);
+    tasks_init_task(task2, TASK_PRIORITY(2), NULL);
+
 
     // Start the scheduler
     tasks_start();
