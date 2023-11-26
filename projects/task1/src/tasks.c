@@ -6,8 +6,13 @@
 #include "FreeRTOS.h"
 #include "delay.h"
 #include "gpio.h"
+#include "gpio_it.h"
+#include "interrupt.h"
 #include "log.h"
 #include "misc.h"
+
+int BTN_INT_EVENT = 5;
+uint32_t notification;
 
 // Non blocking delay. Simply consumes cpu cycles until a given time has passed
 static void prv_delay(const TickType_t delay_ms) {
@@ -56,40 +61,59 @@ TASK(GPIO_LED, TASK_STACK_512) {
     .port = GPIO_PORT_A,
     .pin = 15,
   };
+  GpioAddress btn1 = {
+    .port = GPIO_PORT_A,
+    .pin = 7,
+  };
+  InterruptSettings btn1_settings = {
+    .type = INTERRUPT_TYPE_INTERRUPT,
+    .priority = INTERRUPT_PRIORITY_NORMAL,
+  };
 
   const GpioAddress *addr_led1 = &led1;
   const GpioAddress *addr_led2 = &led2;
   const GpioAddress *addr_led3 = &led3;
   const GpioAddress *addr_led4 = &led4;
+  const GpioAddress *addr_btn1 = &btn1;
 
   const GpioMode pin_mode_led1 = GPIO_OUTPUT_PUSH_PULL;
   const GpioMode pin_mode_led2 = GPIO_OUTPUT_PUSH_PULL;
   const GpioMode pin_mode_led3 = GPIO_OUTPUT_PUSH_PULL;
   const GpioMode pin_mode_led4 = GPIO_OUTPUT_PUSH_PULL;
+  const GpioMode pin_mode_btn1 = GPIO_INPUT_PULL_DOWN;
 
   GpioState state_led1 = GPIO_STATE_HIGH;
   GpioState state_led2 = GPIO_STATE_HIGH;
   GpioState state_led3 = GPIO_STATE_HIGH;
   GpioState state_led4 = GPIO_STATE_HIGH;
+  GpioState state_btn1 = GPIO_STATE_LOW;
 
   gpio_init_pin(addr_led1, pin_mode_led1, state_led1);
   gpio_init_pin(addr_led2, pin_mode_led2, state_led2);
   gpio_init_pin(addr_led3, pin_mode_led3, state_led3);
   gpio_init_pin(addr_led4, pin_mode_led4, state_led4);
+  gpio_init_pin(addr_btn1, pin_mode_btn1, state_btn1);
+
+  const InterruptSettings *interrupt_settings_btn1 = &btn1_settings;
 
   while (true) {
-    gpio_toggle_state(addr_led1);
-    prv_delay(1);
-    gpio_toggle_state(addr_led2);
-    prv_delay(1);
-    gpio_toggle_state(addr_led3);
-    prv_delay(1);
-    gpio_toggle_state(addr_led4);
-    prv_delay(1);
+    gpio_it_register_interrupt(addr_btn1, interrupt_settings_btn1, BTN_INT_EVENT, GPIO_LED);
+    notify_get(&notification);
+    if (notify_check_event(&notification, BTN_INT_EVENT)) {
+      gpio_toggle_state(addr_led1);
+      prv_delay(1);
+      gpio_toggle_state(addr_led2);
+      prv_delay(1);
+      gpio_toggle_state(addr_led3);
+      prv_delay(1);
+      gpio_toggle_state(addr_led4);
+      prv_delay(1);
+    }
   }
 }
 
 int main(void) {
+  interrupt_init();
   gpio_init();
   log_init();
   tasks_init();
