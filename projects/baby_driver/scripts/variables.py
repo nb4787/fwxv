@@ -4,9 +4,7 @@ NUM_PINS_PER_PORT = 16
 
 class GpioPort:
     # pylint: disable=too-few-public-methods
-    '''
-    An enumeration to specify GPIO ports by name (e.g. GpioPort.A instead of 0).
-    '''
+    ''' An enumeration to specify GPIO ports by name (e.g. GpioPort.A instead of 0) '''
     A = 0
     B = 1
     C = 2

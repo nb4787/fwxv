@@ -1,6 +1,5 @@
 '''Baby Driver's I2C Control Script'''
 
-
 def i2c_write(port, address, tx_bytes, reg=None):
     '''
     Writes over I2C to the given port/address
