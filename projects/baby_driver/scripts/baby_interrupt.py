@@ -1,6 +1,7 @@
 '''Baby Driver's Interrupt Control Script'''
 from variables import GpioPort, NUM_PINS_PER_PORT
 
+
 class InterruptEdge:
     # pylint: disable=too-few-public-methods
     '''Stores interrupt edge values'''
@@ -8,6 +9,7 @@ class InterruptEdge:
     FALLING = 1
     RISING_AND_FALLING = 2
     NUM_INTERRUPT_EDGES = 3
+
 
 def register_gpio_interrupt(port, pin, edge=InterruptEdge.RISING_AND_FALLING, callback=None):
     '''
@@ -48,9 +50,9 @@ def register_gpio_interrupt(port, pin, edge=InterruptEdge.RISING_AND_FALLING, ca
         raise ValueError("ERROR: Expected pin between 0 and {}".format(NUM_PINS_PER_PORT - 1))
 
     if isinstance(edge, str):
-        if edge.upper() not in InterruptEdge.__members__:
+        if edge.upper() not in dir(InterruptEdge):
             raise AttributeError("ERROR: 'RISING', 'FALLING', 'RISING_AND_FALLING' for edge")
-        edge = InterruptEdge[edge.upper()]
+        edge = getattr(InterruptEdge, edge.upper())
 
     if edge < 0 or edge >= InterruptEdge.NUM_INTERRUPT_EDGES:
         raise ValueError("ERROR: Invalid edge, 0 (Rising), 1 (Falling), 2 (Rising_and_falling)")
