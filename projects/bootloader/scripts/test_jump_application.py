@@ -1,18 +1,36 @@
 import unittest
-
-from jump_application import Jump_Application
-from can_datagram import Datagram, DatagramListener, DatagramSender
-
-TEST_CHANNEL = 'vcan0'
+from unittest.mock import MagicMock, patch
+from jump_application import Jump_Application, CAN_ARBITRATION_JUMP_ID
+from can_datagram import Datagram
 
 class TestJumpApplication(unittest.TestCase):
 
-    def test_handle_datagram(self):
-        self._callback_triggered = False
+    @patch('jump_application.DatagramSender', autospec=True)
+    def setUp(self, MockSender):
+        self.mock_sender = MockSender.return_value
+        self.app = Jump_Application(sender=self.mock_sender)
 
-        listener = DatagramListener(self._callback_triggered)
-        sender = DatagramSender(bustype="virtual", channel=TEST_CHANNEL, receive_own_messages=True)
-        jump_app = Jump_Application(listener, sender)
+    def test_validate_board_id_valid(self):
+        self.assertTrue(self.app.validate_board_id(1))
 
-        
-        
+    def test_validate_board_id_invalid(self):
+        self.assertFalse(self.app.validate_board_id(-1))
+        self.assertFalse(self.app.validate_board_id("string"))
+
+    def test_start_jump_process_valid(self):
+        board_id = 1
+        self.app.start_jump_process(board_id)
+        expected_datagram = Datagram(
+            datagram_type_id=CAN_ARBITRATION_JUMP_ID | (board_id << 5),
+            node_ids=[board_id],
+            data=bytearray()
+        )
+        self.mock_sender.send.assert_called_once_with(expected_datagram)
+
+    def test_start_jump_process_invalid(self):
+        board_id = -1
+        self.app.start_jump_process(board_id)
+        self.mock_sender.send.assert_not_called()
+
+if __name__ == '__main__':
+    unittest.main()
