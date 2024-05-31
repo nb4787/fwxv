@@ -135,10 +135,15 @@ void monitor_cruise_control() {
   if (new_cc_state != s_cc_enabled) {
     if (new_cc_state) {
       // Store recent speed from MCI as initial cruise control speed
-      float avg_speed = (get_motor_velocity_velocity_l() + get_motor_velocity_velocity_r()) / 2;
-      float speed_kph = avg_speed * CONVERT_VELOCITY_TO_KPH;
-      s_target_velocity = (unsigned int)speed_kph;
-      pca9555_gpio_set_state(&s_output_leds[CRUISE_LED], PCA9555_GPIO_STATE_HIGH);
+      float avg_speed = ((int16_t)get_motor_velocity_velocity_l() + 
+        (int16_t)get_motor_velocity_velocity_r()) / 2;
+      if (avg_speed > 0) {
+        float speed_kph = avg_speed * CONVERT_VELOCITY_TO_KPH;
+        s_target_velocity = (unsigned int)speed_kph;
+        pca9555_gpio_set_state(&s_output_leds[CRUISE_LED], PCA9555_GPIO_STATE_HIGH);
+      } else { // Fail due to negative speed
+        new_cc_state = s_cc_enabled;
+      }
     } else {
       s_target_velocity = 0;
       pca9555_gpio_set_state(&s_output_leds[CRUISE_LED], PCA9555_GPIO_STATE_LOW);
@@ -167,12 +172,13 @@ void update_drive_output() {
 TASK(update_displays, TASK_MIN_STACK_SIZE) {
   seg_displays_init(&all_displays);
   while (true) {
-    float avg_speed = (get_motor_velocity_velocity_l() + get_motor_velocity_velocity_r()) / 2;
-    float speed_kph = avg_speed * CONVERT_VELOCITY_TO_KPH;
+    float avg_speed =
+      ((int16_t)get_motor_velocity_velocity_l()+(int16_t)get_motor_velocity_velocity_r())/2;
+    float speed_kph = abs(avg_speed*CONVERT_VELOCITY_TO_KPH);
     uint16_t batt_perc_val = get_battery_vt_batt_perc();
     uint16_t aux_battery_voltage = get_battery_status_aux_batt_v();
     if (speed_kph >= 100) {
-      seg_displays_set_int(&all_displays, (int)speed_kph, batt_perc_val, aux_battery_voltage);
+      seg_displays_set_int(&all_displays, abs(speed_kph), batt_perc_val, abs(aux_battery_voltage));
     } else {
       seg_displays_set_float(&all_displays, speed_kph, batt_perc_val, aux_battery_voltage);
     }
