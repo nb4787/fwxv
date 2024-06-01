@@ -50,7 +50,7 @@ void check_late_cycle(BaseType_t delay) {
 
 TASK(master_task, TASK_STACK_512) {
   uint32_t counter = 1;
-  pre_loop_init();
+  // pre_loop_init();
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while (true) {
     // LOG_DEBUG("counter: %u\n", counter);

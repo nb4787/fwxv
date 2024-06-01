@@ -79,9 +79,10 @@ TASK(cell_sense, TASK_STACK_512) {
     // implemntation error) Retry Mechanism
     if (ltc_afe_impl_trigger_cell_conv(ltc_afe_storage)) {
       // If this has failed, try once more after a short delay
+      non_blocking_delay_ms(10);
       status |= ltc_afe_impl_trigger_cell_conv(ltc_afe_storage);
     }
-    delay_ms(CONV_DELAY_MS);
+    non_blocking_delay_ms(10);
 
     if (status != STATUS_CODE_OK) {
       LOG_DEBUG("Cell conv failed: %d\n", status);
@@ -99,7 +100,7 @@ TASK(cell_sense, TASK_STACK_512) {
       // Thermistor select cell 0
       status |= ltc_afe_impl_trigger_aux_conv(ltc_afe_storage, s_thermistor_map[i]);
       // DELAY NEEDED for adc conv to happen
-      delay_ms(1);
+      non_blocking_delay_ms(1);
       // Thermistor read cell 0
       status |= ltc_afe_impl_read_aux(ltc_afe_storage, i);
 
@@ -119,7 +120,7 @@ TASK(cell_sense, TASK_STACK_512) {
     for (size_t cell = 0; cell < (s_afe_settings.num_devices * s_afe_settings.num_cells); cell++) {
       LOG_DEBUG("CELL %zu: %d\n\r", cell,
                 ltc_afe_storage->cell_voltages[ltc_afe_storage->cell_result_lookup[cell]]);
-      delay_ms(3);
+      non_blocking_delay_ms(3);
       max_voltage =
           ltc_afe_storage->cell_voltages[ltc_afe_storage->cell_result_lookup[cell]] > max_voltage
               ? ltc_afe_storage->cell_voltages[ltc_afe_storage->cell_result_lookup[cell]]
@@ -173,20 +174,19 @@ TASK(cell_sense, TASK_STACK_512) {
       // Log thermistor result
       LOG_DEBUG("Thermistor reading: %d\n",
                 ltc_afe_storage->aux_voltages[ltc_afe_storage->aux_result_lookup[thermistor]]);
-      delay_ms(1);
+      non_blocking_delay_ms(1);
 
       if (ltc_afe_storage->aux_result_lookup[thermistor] >= CELL_MAX_TEMPERATURE) {
         LOG_DEBUG("CELL OVERTEMP\n");
         fault_bps_set(BMS_FAULT_OVERTEMP_CELL);
       }
     }
-
-    delay_ms(5000);
+    delay_ms(1000);
   }
 }
 
 StatusCode cell_sense_init(LtcAfeStorage *afe_storage) {
   ltc_afe_storage = afe_storage;
-  tasks_init_task(cell_sense, TASK_PRIORITY(3), NULL);
+  tasks_init_task(cell_sense, TASK_PRIORITY(4), ltc_afe_storage);
   return STATUS_CODE_OK;
 }

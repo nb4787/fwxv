@@ -39,9 +39,7 @@ void pre_loop_init() {
   LOG_DEBUG("Welcome to BMS \n");
   fault_bps_init(&bms_storage.bps_storage);
   aux_sense_init(&bms_storage.aux_storage);
-  cell_sense_init(&bms_storage.ltc_afe_storage);
-
-  init_bms_relays();
+  // init_bms_relays();
   // current_sense_init(&bms_storage, &i2c_settings, FUEL_GAUGE_CYCLE_TIME_MS);
   bms_fan_init(&bms_storage);
 }
@@ -75,7 +73,8 @@ int main() {
   LOG_DEBUG("Welcome to BMS!\n");
   
   init_master_task();
-
+  cell_sense_init(&bms_storage.ltc_afe_storage);
+  
   tasks_start();
 
   LOG_DEBUG("exiting main?");
