@@ -38,39 +38,31 @@ BmsStorage bms_storage;
 void pre_loop_init() {
   LOG_DEBUG("Welcome to BMS \n");
   fault_bps_init(&bms_storage.bps_storage);
-  current_sense_init(&bms_storage, &i2c_settings, FUEL_GAUGE_CYCLE_TIME_MS);
-  // cell_sense_init(&bms_storage.ltc_afe_storage);
   aux_sense_init(&bms_storage.aux_storage);
+  cell_sense_init(&bms_storage.ltc_afe_storage);
+
   init_bms_relays();
+  // current_sense_init(&bms_storage, &i2c_settings, FUEL_GAUGE_CYCLE_TIME_MS);
   bms_fan_init(&bms_storage);
 }
 
 void run_fast_cycle() {}
 
 void run_medium_cycle() {
-  run_can_rx_cycle();
-  wait_tasks(1);
-
-  // cell_conversions();
+  // run_can_rx_cycle();
   // wait_tasks(1);
-  current_sense_run();
-  wait_tasks(1);
 
-  // cell_sense_run();
+  // current_sense_run();
+  // wait_tasks(1);
+
   aux_sense_run();
   bms_run_fan();
 
-  run_can_tx_cycle();
-  wait_tasks(1);
+  // run_can_tx_cycle();
+  // wait_tasks(1);
 }
 
-void run_slow_cycle() {
-  cell_discharge(&bms_storage.ltc_afe_storage);
-
-  if (fault_bps_get()) {
-    LOG_DEBUG("FAULT_BITMASK: %d\n", fault_bps_get());
-  }
-}
+void run_slow_cycle() {}
 
 int main() {
   tasks_init();
@@ -81,6 +73,7 @@ int main() {
   can_init(&s_can_storage, &can_settings);
 
   LOG_DEBUG("Welcome to BMS!\n");
+  
   init_master_task();
 
   tasks_start();

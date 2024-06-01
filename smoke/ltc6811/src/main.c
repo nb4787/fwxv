@@ -72,8 +72,8 @@ LtcAfeSettings s_afe_settings = {
   .aux_bitset = { 0xFF, 0xFF, 0xFF },
 
   .num_devices = 1,
-  .num_cells = 12,
-  .num_thermistors = 6,
+  .num_cells = 4,
+  .num_thermistors = 0,
 };
 
 TASK(smoke_ltc, TASK_STACK_1024) {
