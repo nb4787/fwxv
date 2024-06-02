@@ -1,31 +1,32 @@
 from can_datagram import Datagram, DatagramSender
+from validation import Validation
 
-CAN_ARBITRATION_JUMP_ID = 0b00000000011
+CAN_ARBITRATION_JUMP_ID = 0b00000000010
 
 class Jump_Application:
-    def __init__(self, sender: DatagramSender) -> None:
-        self._sender = sender
+    def __init__(self, sender=None) -> None:
+        if sender:
+            self._sender = sender
+        else:
+            self._sender = DatagramSender()
 
-    def validate_board_id(self, board_int: int):
-        if isinstance(board_int, int) and board_int >= 0:
-            return True
-        
-        print(f'Invalid Board ID: {board_int}')
-        return False
-
-    def start_jump_process(self, board_id: int) -> None:
-        if not self.validate_board_id(board_id):
+    def start_jump_process(self, board_nums: int, jump_app_id: int) -> None:
+        if not Validation.validate_board_id(board_nums) and not Validation.validate_jump_size(jump_app_id):
+            print(f'Error starting jump application, boards {board_nums} or app id {jump_app_id} is not valid')
             return
 
-        print(f"Starting jump process for board {board_id}...")
+        print(f"Starting jump process for boards {board_nums}...")
 
-        datagram_id = CAN_ARBITRATION_JUMP_ID | (board_id << 5)
+        board_id = list(range(board_nums + 1))
+
+        datagram_id = CAN_ARBITRATION_JUMP_ID | (board_nums << 5)
 
         # Create a datagram with the jump message
+        #TODO add data to send to microcontroller
         jump_datagram = Datagram(
             datagram_type_id=datagram_id,
-            node_ids=[board_id],
-            data=bytearray()
+            node_ids=board_id,
+            data=bytearray(jump_app_id)
         )
 
         self._sender.send(jump_datagram)
