@@ -22,7 +22,7 @@ class Jump_Application:
         datagram_id = CAN_ARBITRATION_JUMP_ID | (board_nums << 5)
 
         # Create a datagram with the jump message
-        #TODO add data to send to microcontroller
+        #Send an int to jump to that file (max 2^16-1 possible applications)
         jump_datagram = Datagram(
             datagram_type_id=datagram_id,
             node_ids=board_id,
